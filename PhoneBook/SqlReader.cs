@@ -6,7 +6,7 @@ namespace PhoneBook
 {
     public class SqlReader
     {
-        public List<string> listRows = new List<string>();
+        public List<string> listAllValues = new List<string>();
 
         public SqlReader(SqlCommand cmd, int col)
         {
@@ -15,13 +15,12 @@ namespace PhoneBook
                 while (rdr.Read())
                 {
                     var myString = rdr.GetString(col);
-                    listRows.Add(myString);
+                    listAllValues.Add(myString);
                 }
             }
         }
 
-        
-        public SqlReader(SqlCommand cmd, string col)
+        public SqlReader(SqlCommand cmd)
         {
             cmd.CommandType = CommandType.Text;
             cmd.CommandText = "SELECT COLUMN_NAME,* FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'PhoneBook'";
@@ -30,18 +29,14 @@ namespace PhoneBook
                 while (rdr.Read())
                 {
                     string myString = rdr.GetString(0);
-                    listRows.Add(myString);
+                    listAllValues.Add(myString);
                 }
-                
             }
-
-            
-           
         }
 
-        public void clearList()
+        public void clearListAllValues()
         {
-            listRows = null;
+            listAllValues = null;
         }
     }
 }
