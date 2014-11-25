@@ -7,6 +7,9 @@
     <title></title>
 </head>
 <body>
+<asp:PlaceHolder ID="PlaceHolder1" runat="server">
+    
+</asp:PlaceHolder>
     <form id="form1" runat="server">
         <div>
             <table>
@@ -72,5 +75,7 @@
             </table>
         </div>
     </form>
+    
 </body>
+
 </html>
