@@ -14,26 +14,26 @@ public partial class Default : System.Web.UI.Page
         GenerateTable();
     }
 
-    private SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["ConnectionToLocalDB"].ToString());
-    private SqlCommand cmd = new SqlCommand();
+    private SqlConnection localDBConnection = new SqlConnection(ConfigurationManager.ConnectionStrings["ConnectionToLocalDB"].ToString());
+    private SqlCommand sqlCommand = new SqlCommand();
 
     protected void btnSubmit_Click(object sender, EventArgs e)
     {
         try
         {
-            cmd.Connection = con; //assigning connection to command
-            cmd.CommandType = CommandType.Text; //representing type of command
-            cmd.CommandText = "INSERT into dbo.PhoneBook(Name,Mobile,Phone,Email)VALUES (@Name,@Mobile,@Phone,@Email)";
+            sqlCommand.Connection = localDBConnection;
+            sqlCommand.CommandType = CommandType.Text;
+            sqlCommand.CommandText = "INSERT into dbo.PhoneBook(Name,Mobile,Phone,Email)VALUES (@Name,@Mobile,@Phone,@Email)";
 
             //adding parameters with value
-            cmd.Parameters.AddWithValue("@Name", ((TextBox)FindControl("txtName")).Text);
-            cmd.Parameters.AddWithValue("@Email", ((TextBox)FindControl("txtEmail")).Text);
-            cmd.Parameters.AddWithValue("@Mobile", ((TextBox)FindControl("txtMobile")).Text);
-            cmd.Parameters.AddWithValue("@Phone", ((TextBox)FindControl("txtPhone")).Text);
+            sqlCommand.Parameters.AddWithValue("@Name", ((TextBox)FindControl("txtName")).Text);
+            sqlCommand.Parameters.AddWithValue("@Email", ((TextBox)FindControl("txtEmail")).Text);
+            sqlCommand.Parameters.AddWithValue("@Mobile", ((TextBox)FindControl("txtMobile")).Text);
+            sqlCommand.Parameters.AddWithValue("@Phone", ((TextBox)FindControl("txtPhone")).Text);
 
-            con.Open(); //opening connection
-            cmd.ExecuteNonQuery();  //executing query
-            con.Close(); //closing connection
+            localDBConnection.Open();
+            sqlCommand.ExecuteNonQuery();
+            localDBConnection.Close();
             GenerateTable();
         }
         catch (Exception ex)
@@ -46,56 +46,48 @@ public partial class Default : System.Web.UI.Page
 
     protected DataTable CreateDataTable()
     {
-        cmd.Connection = con; //assigning connection to command;
-        cmd.CommandType = CommandType.Text;
+        sqlCommand.Connection = localDBConnection; //assigning connection to command;
+        sqlCommand.CommandType = CommandType.Text;
         DataTable dt = new DataTable();
         DataRow dr = null;
-        con.Open();
+        localDBConnection.Open();
 
         int count = 0;
-        using (SqlCommand cmdCount = new SqlCommand("SELECT COUNT(*) FROM dbo.PhoneBook", cmd.Connection))
+        using (SqlCommand cmdCount = new SqlCommand("SELECT COUNT(*) FROM dbo.PhoneBook", sqlCommand.Connection))
         {
             count = (int)cmdCount.ExecuteScalar();
         }
         List<String> lRow = new List<String>();
-        cmd.CommandText = "SELECT * FROM PhoneBook";
-        using (SqlDataReader rdr = cmd.ExecuteReader())
+        sqlCommand.CommandText = "SELECT * FROM PhoneBook";
+        using (SqlDataReader dataReader = sqlCommand.ExecuteReader())
         {
-            while (rdr.Read())
+            while (dataReader.Read())
             {
                 for (int i = 0; i < 6; i++)
                 {
                     try
                     {
-                        String myString = (string)rdr.GetString(i);
+                        String myString = (string)dataReader.GetString(i);
                         lRow.Add(myString);
                     }
                     catch (System.Data.SqlTypes.SqlNullValueException ex)
                     {
                         lRow.Add("");
-                        
                     }
                     catch (System.InvalidCastException ex)
                     {
-                        int ii = rdr.GetInt32(i);
-                        String myString = string.Empty + ii;
+                        String myString = string.Empty + (dataReader.GetInt32(i));
                         lRow.Add(myString);
                     }
                 }
             }
         }
 
-        SqlReader name = new SqlReader(cmd);
-        
-        con.Close();
+        SqlReader valuesList = new SqlReader(sqlCommand);
 
-        //Create the Columns Definition
-        //dt.Columns.Add(new DataColumn(name.listRows[0], typeof(string)));
-        //dt.Columns.Add(new DataColumn("Mobile", typeof(string)));
-        //dt.Columns.Add(new DataColumn("E-Mail", typeof(string)));
-        //dt.Columns.Add(new DataColumn("Phone", typeof(string)));
+        localDBConnection.Close();
 
-        foreach (string value in name.listAllValues)
+        foreach (string value in valuesList.listAllValues)
         {
             dt.Columns.Add(new DataColumn(value, typeof(string)));
         }
@@ -104,29 +96,13 @@ public partial class Default : System.Web.UI.Page
         for (int i = 1; i <= rows; i++)
         {
             dr = dt.NewRow();
-            foreach (string value in name.listAllValues)
+            foreach (string value in valuesList.listAllValues)
             {
                 dr[value] = lRow[x];
 
                 x++;
             } dt.Rows.Add(dr);
         }
-        //dr[name.listRows[0]] = name.listRows[0];
-        //dr["Mobile"] = "B";
-        //dr["E-Mail"] = "C";
-
-        //
-
-        ////Add the second Row to each columns defined
-        //dr = dt.NewRow();
-
-        //dr[name.listRows[0]] = "D";
-        //dr["Mobile"] = "E";
-        //dr["E-Mail"] = "F";
-
-        //dt.Rows.Add(dr);
-
-        //You can continue adding rows here
 
         return dt;
     }
